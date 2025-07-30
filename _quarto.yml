@@ -8,13 +8,13 @@ website:
     background: "#6D5D54"  # Marrom escuro terroso
     primary: "#A9927D"     # Marrom claro (hover e destaque)
     left:
-      - text: "Início"
+      - text: ""
         href: index.qmd
-      - text: "Introdução"
+      - text: "Apresentação"
         href: introducao.qmd
       - text: "Estatísticas"
         href: melhoresprodutores.qmd
-      - text: "Resultados"
+      - text: "Visualização"
         href: resultados.qmd
       - text: "Conclusão"
         href: conclusao.qmd
