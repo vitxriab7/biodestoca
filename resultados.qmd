@@ -1,0 +1,150 @@
+---
+title: "Resultados"
+---
+
+## 📈 Análises e Gráficos por Enzima
+
+```{r}
+# Carregar pacotes necessários
+library(tidyverse)
+library(forcats)
+library(emmeans)
+
+# Carregar os dados previamente salvos pelo arquivo melhoresisolados.qmd
+load("estatisticas_base.RData")
+
+# Verificar as enzimas disponíveis
+enzimas <- unique(dados$enzima)
+
+# Dicionário de nomes completos das enzimas
+nomes_enzimas <- c(
+  bgli = "β-glicosidase",
+  xil = "Xilanase",
+  endog = "Endoglucanase",
+  lac = "Lacase",
+  fpa = "FPase",
+  bxil = "β-xilosidase",
+  mangper = "Manganês Peroxidase"
+)
+```
+
+------------------------------------------------------------------------
+
+## 🧪 Gráficos de Atividade Enzimática
+
+```{r}
+# Loop para gerar um gráfico por enzima
+for (enz in enzimas) {
+  
+  subdados <- dados %>%
+    filter(enzima == enz) %>%
+    filter(!is.na(atividade), !is.nan(atividade), !is.infinite(atividade))
+  
+  if (nrow(subdados) < 3) next
+  
+  nome_completo <- nomes_enzimas[[tolower(enz)]]
+  if (is.null(nome_completo)) nome_completo <- enz
+  
+  grafico <- subdados %>%
+    group_by(isolado, substrato) %>%
+    summarise(
+      media = mean(atividade, na.rm = TRUE),
+      .groups = "drop"
+    ) %>%
+    ggplot(aes(x = media, y = forcats::fct_rev(isolado), fill = substrato)) +
+    geom_col() +
+    labs(
+      title = paste("Atividade da enzima:", nome_completo),
+      x = "Média da atividade (U/mL)",
+      y = "Isolado",
+      fill = "Substrato"
+    ) +
+    theme_minimal() +
+    theme(
+      plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+      legend.position = "right"
+    )
+  
+  print(grafico)
+}
+```
+
+------------------------------------------------------------------------
+
+## 🏆 Top 3 Isolados por Enzima
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(forcats)
+library(scales)
+
+# Dicionário de nomes completos das enzimas
+nomes_enzimas <- c(
+  bgli = "β-glicosidase",
+  xil = "Xilanase",
+  endog = "Endoglucanase",
+  lac = "Lacase",
+  fpa = "FPase",
+  bxil = "β-xilosidase",
+  mangper = "Manganês Peroxidase"
+)
+
+# Calcular top 3 isolados por enzima
+melhores_isolados <- dados %>%
+  group_by(enzima, isolado) %>%
+  summarise(media_atividade = mean(atividade, na.rm = TRUE), .groups = "drop") %>%
+  arrange(enzima, desc(media_atividade)) %>%
+  group_by(enzima) %>%
+  slice_head(n = 3) %>%
+  mutate(colocacao = row_number())
+
+# Novas cores do pódio (1º, 2º, 3º)
+cores_podio <- c("1" = "#1f78b4",  # Azul escuro
+                 "2" = "#33a02c",  # Verde vibrante
+                 "3" = "#ff7f00")  # Laranja forte
+
+# Loop para gerar pódio por enzima com visual clean
+for (enz in unique(melhores_isolados$enzima)) {
+  
+  dados_podio <- melhores_isolados %>% 
+    filter(enzima == enz)
+  
+  # Obter o nome completo da enzima (confere minúsculas)
+  nome_completo <- nomes_enzimas[[tolower(enz)]]
+  if (is.null(nome_completo)) nome_completo <- enz
+  
+  grafico_podio <- ggplot(dados_podio, 
+                          aes(x = fct_reorder(isolado, -media_atividade), 
+                              y = media_atividade, 
+                              fill = factor(colocacao))) +
+    geom_col(width = 0.6, 
+             color = "white",   # Borda branca nas barras
+             size = 0.7, 
+             show.legend = FALSE) +
+    geom_text(aes(label = round(media_atividade, 2)), 
+              vjust = -0.5, 
+              size = 4) +
+    scale_fill_manual(values = cores_podio) +
+    labs(
+      title = paste("🏆 Pódio: Top 3 isolados para", nome_completo),
+      x = NULL,  # Removendo o rótulo do eixo x para maior limpeza
+      y = "Média da atividade enzimática"
+    ) +
+    theme_minimal(base_size = 14) +
+    theme(
+      plot.title = element_text(hjust = 0.5, 
+                                face = "bold", 
+                                margin = margin(b = 10)),
+      axis.text.x = element_text(face = "bold"),
+      panel.grid.minor = element_blank(),         # Remove gridlines menores
+      panel.grid.major.x = element_blank(),         # Remove gridlines verticais
+      axis.line = element_line(color = "black"),    # Linhas dos eixos para delimitação
+      plot.margin = margin(15, 15, 15, 15)
+    ) +
+    scale_y_continuous(expand = expansion(mult = c(0, 0.1)))  # Dá um espaço para os rótulos acima das barras
+  
+  print(grafico_podio)
+}
+
+```

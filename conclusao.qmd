@@ -1,0 +1,24 @@
+---
+title: "Conclusões"
+format: html
+---
+
+As análises revelaram variações expressivas na atividade enzimática entre os diferentes isolados e substratos, evidenciando o potencial diferencial dos fungos xilófagos avaliados. A diversidade de respostas observada destaca a importância da seleção criteriosa de isolados e substratos para aplicações específicas, especialmente no contexto de biodegradação de resíduos lignocelulósicos.
+
+Com base na média da atividade enzimática, foram selecionados os três isolados com melhor desempenho para cada enzima, configurando-se como os principais candidatos para futuras aplicações biotecnológicas:
+
+-   β-glicosidase: isolados 24, 4 e 1
+
+-   β-xilosidase: isolados 24, 52 e 31
+
+-   Endoglucanase: isolados 44, 5 e 48
+
+-   F-PAse: isolados 17, 44 e 52
+
+-   Lacase: isolados 36, 31 e 37
+
+-   Manganês-peroxidase: isolados 26, 18 e 53
+
+-   Xilanase: isolados 24, 1 e 42
+
+Ao integrar os resultados das diferentes enzimas avaliadas, destacam-se como os **três isolados** mais promissores no desempenho geral: **24, 1 e 42.** Esses isolados apresentaram elevada atividade em múltiplas enzimas e, portanto, são recomendados para testes em maior escala visando sua aplicação na biodestoca e outras estratégias de degradação lignocelulósica.

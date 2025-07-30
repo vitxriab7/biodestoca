@@ -1,0 +1,35 @@
+---
+title: ""
+---
+
+<!-- Banner com imagem de capa -->
+
+::: banner-container
+![](Imagens/capa.png){.banner-image alt="Capa do projeto" fig-align="center"}
+:::
+
+<!-- Conteúdo centralizado -->
+
+# BIODEGRADAÇÃO - Uma abordagem utilizando enzimas fúngicas
+
+Olá, este é o projeto Biodestoca do Laboratório de Patologia Florestal Molelucar e Laboratório de Análises Bioquimicas da Universidade Federal de Viçosa (UFV), juntamente com a empresa CMPC - Celulose Rio Grandense. Nesse site, iremos apresentar a você as etapas desse projeto desenvolvido ao longo do tempo.
+
+# **Biotecnologia aplicada à destoca florestal**
+
+Este site apresenta as análises e resultados do projeto carinhosamente nomeado "BIODESTOCA" com foco na aplicação de enzimas lignocelulolíticas para acelerar a **biodegradação de tocos remanescentes em reflorestamentos** de forma sustentável.
+
+# Principais vantagens:
+
+::: highlight-box
+-   ⏱ **Redução média de 35–40% no tempo de degradação**
+
+-   🌱 **Preservação da microbiota do solo**
+
+-   💰 **Economia de até 30% em custos operacionais**
+:::
+
+------------------------------------------------------------------------
+
+```         
+            Navegue pelo menu acima para acessar os nossos resultados.
+```

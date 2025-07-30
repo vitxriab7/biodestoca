@@ -1,0 +1,330 @@
+---
+title: ""
+format: html
+editor: visual
+---
+
+# ANÁLISE ESTATÍSTICA PARA AS ATIVIDADES ENZIMÁTICAS
+
+## Delineamento Experimental e Conjunto de dados:
+
+Nossos dados comportam a atividade enzimática da coleção fúngica CMPC coletados no Sul do Brasil.
+
+-   A planilha excel contém dados de 53 isolados induzidos em 3 diferentes substratos, dos quais vamos quantificar a expressão de 7 enzimas.
+-   2 réplicas por isolado, cada uma com 3 erlenmeyers.
+
+# 📊 Metodologia estatística aplicada:
+
+## Seleção dos melhores produtores utilizando apenas média simples
+
+Essa seleção foi feita utilizando apenas as maiores atividades médias por enzima desconsiderando o fator biomassa:
+
+Esse código exporta a tabela de maiores médias demonstrando (enzima + isolado + média de atividade+ biomassa) + gráfico de barras empilhadas por enzima analisada.
+
+```{r}
+# Carregar pacotes necessários
+library(readxl)
+library(dplyr)
+library(ggplot2)
+library(openxlsx)
+
+# Ler os dados
+dados <- read_excel("at_enz.xlsx")
+
+# Calcular média de atividade por Enzima, Isolado e Biomassa
+media_atividade_com_biomassa <- dados %>%
+  group_by(Enzima, Isolado, Biomassa) %>%
+  summarise(Media_Atividade = mean(Atividade, na.rm = TRUE), .groups = "drop")
+
+# Calcular a média geral por Enzima e Isolado (sem considerar biomassa)
+media_atividade <- media_atividade_com_biomassa %>%
+  group_by(Enzima, Isolado) %>%
+  summarise(Media_Atividade = mean(Media_Atividade), .groups = "drop")
+
+# Selecionar top 3 isolados por enzima
+top_isolados <- media_atividade %>%
+  group_by(Enzima) %>%
+  slice_max(order_by = Media_Atividade, n = 3) %>%
+  arrange(Enzima, desc(Media_Atividade)) %>%
+  ungroup()
+
+# Para cada top isolado, identificar qual biomassa teve maior média
+biomassa_destaque <- media_atividade_com_biomassa %>%
+  semi_join(top_isolados, by = c("Enzima", "Isolado")) %>%
+  group_by(Enzima, Isolado) %>%
+  slice_max(order_by = Media_Atividade, n = 1) %>%
+  select(Enzima, Isolado, Biomassa)
+
+# Juntar com a tabela final
+resultado_final <- top_isolados %>%
+  left_join(biomassa_destaque, by = c("Enzima", "Isolado"))
+
+# Exportar para Excel
+write.xlsx(resultado_final, "top_isolados_com_biomassa_destaque.xlsx")
+
+# Criar gráficos para cada enzima
+enzimas <- unique(dados$Enzima)
+
+dir.create("graficos", showWarnings = FALSE)  # Pasta para salvar os gráficos
+
+for (enz in enzimas) {
+  dados_grafico <- dados %>%
+    filter(Enzima == enz) %>%
+    group_by(Isolado, Biomassa) %>%
+    summarise(Media = mean(Atividade, na.rm = TRUE), .groups = "drop")
+  
+  p <- ggplot(dados_grafico, aes(x = factor(Isolado), y = Media, fill = Biomassa)) +
+    geom_bar(stat = "identity", position = "stack") +
+    labs(title = paste("Atividade média por biomassa -", enz),
+         x = "Isolado",
+         y = "Atividade Média") +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  
+  # Salvar gráfico
+  ggsave(filename = paste0("graficos/", enz, "_grafico.png"),
+         plot = p, width = 8, height = 5)
+}
+
+```
+
+## Seleção utilizando estatística robusta e comparação de médias
+
+Esse código:
+
+-   Faz análise para cada enzima.
+
+-   Detecta se ANOVA+Tukey ou Kruskal+Dunn é adequado.
+
+-   Seleciona top 5 isolados (baseado na média da melhor biomassa).
+
+-   No gráfico, barras são coloridas pela biomassa da melhor média.
+
+-   Asterisco vermelho indica isolados significativamente diferentes do melhor isolado.
+
+-   Exporta uma tabela com isolado, biomassa, média e asterisco.
+
+```{r}
+# Pacotes necessários
+library(readxl)
+library(dplyr)
+library(ggpubr)
+library(rstatix)
+library(ggplot2)
+library(openxlsx)
+library(patchwork)
+
+# Ler os dados
+dados <- read_excel("at_enz.xlsx")
+
+# Converter variáveis para fator
+dados <- dados %>%
+  mutate(
+    Enzima = as.factor(Enzima),
+    Isolado = as.factor(Isolado),
+    Biomassa = as.factor(Biomassa),
+    Tubo = as.factor(Tubo),
+    Repeticao = as.factor(Repeticao)
+  )
+
+# Objeto para armazenar os melhores isolados por estatística e biomassa
+tabela_melhores <- data.frame()
+
+# Loop por enzima
+for (enzima in unique(dados$Enzima)) {
+  cat("\n\n===== Enzima:", enzima, "=====\n")
+  
+  subdados <- dados %>% filter(Enzima == enzima)
+  
+  # Calcular média da atividade por Isolado e Biomassa
+  medias <- subdados %>%
+    group_by(Isolado, Biomassa) %>%
+    summarise(Media_Atividade = mean(Atividade, na.rm = TRUE), .groups = "drop")
+  
+  # Para cada isolado, escolher a biomassa com maior média
+  melhores <- medias %>%
+    group_by(Isolado) %>%
+    slice_max(order_by = Media_Atividade, n = 1) %>%
+    ungroup()
+  
+  # Ordenar pelo topo 5 isolados
+  melhores <- melhores %>%
+    arrange(desc(Media_Atividade)) %>%
+    slice_head(n = 5)
+  
+  # Teste de normalidade
+  shapiro_p <- tryCatch({
+    shapiro_test(subdados, Atividade)$p
+  }, error = function(e) {
+    NA
+  })
+  
+  # Teste de homogeneidade de variâncias (Levene)
+  levene_p <- tryCatch({
+    levene_test(subdados, Atividade ~ Isolado)$p
+  }, error = function(e) {
+    NA
+  })
+  
+  cat("Shapiro-Wilk p-valor:", shapiro_p, "\n")
+  cat("Levene p-valor:", levene_p, "\n")
+  
+  if (!is.na(shapiro_p) && !is.na(levene_p) && shapiro_p > 0.05 && levene_p > 0.05) {
+    cat("→ Dados normais e homogêneos: ANOVA + Tukey\n")
+    
+    anova <- aov(Atividade ~ Isolado, data = subdados)
+    tukey <- TukeyHSD(anova)
+    
+    tukey_df <- as.data.frame(tukey$Isolado)
+    tukey_df$Comparacao <- rownames(tukey_df)
+    
+    melhor_isolado <- melhores$Isolado[1]
+    
+    # Isolados que diferem significativamente do melhor isolado
+    comparacoes_relevantes <- tukey_df %>%
+      filter(grepl(melhor_isolado, Comparacao)) %>%
+      mutate(
+        outro_isolado = ifelse(grepl(melhor_isolado, Comparacao),
+                              sub(".*-", "", Comparacao),
+                              sub("-.*", "", Comparacao)),
+        signif = `p.adj` < 0.05
+      )
+    
+    isolados_significativos <- comparacoes_relevantes %>%
+      filter(signif == TRUE) %>%
+      pull(outro_isolado) %>%
+      unique()
+    
+    melhores <- melhores %>%
+      mutate(asterisco = ifelse(Isolado %in% isolados_significativos, "*", ""))
+    
+  } else {
+    cat("→ Dados não normais e/ou heterogêneos: Kruskal-Wallis + Dunn\n")
+    
+    kruskal <- kruskal_test(subdados, Atividade ~ Isolado)
+    print(kruskal)
+    
+    dunn <- dunn_test(subdados, Atividade ~ Isolado, p.adjust.method = "bonferroni")
+    
+    melhor_isolado <- melhores$Isolado[1]
+    
+    # Isolados que diferem significativamente do melhor isolado (p.adj < 0.05)
+    isolados_significativos <- dunn %>%
+      filter((group1 == melhor_isolado | group2 == melhor_isolado) & p.adj < 0.05) %>%
+      mutate(outro_isolado = ifelse(group1 == melhor_isolado, group2, group1)) %>%
+      pull(outro_isolado) %>%
+      unique()
+    
+    melhores <- melhores %>%
+      mutate(asterisco = ifelse(Isolado %in% isolados_significativos, "*", ""))
+  }
+  
+  # Gráfico
+  p <- ggplot(melhores, aes(x = reorder(Isolado, -Media_Atividade), y = Media_Atividade, fill = Biomassa)) +
+    geom_col() +
+    geom_text(aes(label = asterisco), vjust = -0.5, size = 8, color = "red") +
+    labs(title = paste("Top 5 Isolados -", enzima),
+         x = "Isolado", y = "Média de Atividade", fill = "Biomassa") +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  
+  print(p)
+  
+  # Adicionar coluna de enzima para exportação
+  melhores$Enzima <- enzima
+  
+  # Juntar na tabela final
+  tabela_melhores <- bind_rows(tabela_melhores, melhores)
+}
+
+# Exportar tabela final com melhores isolados, biomassa e indicação de significância
+write.xlsx(tabela_melhores, "melhores_isolados_por_estatistica.xlsx", rownames = FALSE)
+
+
+```
+
+## Visualização dos melhores isolados
+
+Esse código cria um gráfico facetado com as médias dos melhores isolados por enzima.
+
+```{r}
+
+# Gráfico facetado com todos os melhores isolados
+library(readxl)
+library(ggplot2)
+
+# Ler arquivo Excel - substitua "dados.xlsx" pelo nome do seu arquivo
+df <- read_excel("melhores_isolados_por_estatistica.xlsx")
+
+# Mostrar as primeiras linhas para conferir os dados
+head(df)
+
+# Criar gráfico de barras facetado com eixos independentes
+nomes_enzyme <- c(
+  "xil" = "Xilanase",
+  "endog" = "Endoglucanase",
+  "fpa" = "FPase",
+  "lac" = "Lacase",
+  "bgli" = "β glicosidase",
+  "bxil" = "β xilosidase",
+  "mangper" = "Manganês peroxidase"
+)
+
+ggplot(df, aes(x = Isolado, y = Media_Atividade, fill = Biomassa)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.8)) +
+  facet_wrap(~ Enzima, scales = "free", labeller = labeller(Enzima = nomes_enzyme)) +
+  labs(
+    title = "Médias agrupadas por Biomassa",
+    fill = "Biomassa",
+    caption = "Fonte: Elaborado pela autora, 2025."
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  )
+
+```
+
+## Visualização da identificação a nivel de gênero
+
+Quanto a identificação a nivel de gênero:
+
+```{r}
+# Instalar pacotes, se ainda não tiver
+if (!require(readxl)) install.packages("readxl")
+if (!require(ggplot2)) install.packages("ggplot2")
+
+library(readxl)
+library(ggplot2)
+
+# 1. Carregar o arquivo Excel
+# Substitua "arquivo.xlsx" pelo nome real do seu arquivo
+dados_tax <- read_excel("cap1.xlsx", sheet = 2)
+
+# 2. Verificar as colunas (opcional)
+head(dados_tax)
+colnames(dados_tax)
+
+# 3. Calcular a frequência dos filos
+freq_ordem <- as.data.frame(table(dados_tax$ordem))
+colnames(freq_ordem) <- c("ordem", "frequencia")
+
+# 4. Calcular a porcentagem
+freq_ordem$porcentagem <- round(100 * freq_ordem$frequencia / sum(freq_ordem$frequencia), 1)
+
+# 5. Criar rótulo para a legenda
+freq_ordem$label <- paste0(freq_ordem$ordem, " (", freq_ordem$porcentagem, "%)")
+
+# 6. Gerar o gráfico de pizza
+ggplot(freq_ordem, aes(x = "", y = frequencia, fill = label)) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar("y", start = 0) +
+  labs(caption = "Fonte: Betim, 2025.") +
+  theme_void() +
+  theme(legend.position = "right") +
+  guides(fill = guide_legend(title = "Ordem"))
+
+
+```
