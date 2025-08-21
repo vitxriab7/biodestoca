@@ -5,20 +5,20 @@ format: html
 
 As análises revelaram variações expressivas na atividade enzimática entre os diferentes isolados e substratos, evidenciando o potencial diferencial dos fungos xilófagos avaliados. A diversidade de respostas observada destaca a importância da seleção criteriosa de isolados e substratos para aplicações específicas, especialmente no contexto de biodegradação de resíduos lignocelulósicos.
 
-Com base na média da atividade enzimática, foram selecionados os três isolados com melhor desempenho para cada enzima, configurando-se como os principais candidatos para futuras aplicações biotecnológicas:
+Com base na média da atividade enzimática, foram selecionados os melhores isolados com melhor desempenho para cada enzima, configurando-se como os principais candidatos para futuras aplicações biotecnológicas e composição de um mix enzimático para aplicação em testes no campo:
 
--   β-glicosidase: isolados 24, 4 e 1
+-   β-glicosidase: isolados 24, 1 e 4 biomassa: Farelo de Trigo
 
--   β-xilosidase: isolados 24, 52 e 31
+-   β-xilosidase: isolados 24, 28 e 23 biomassa: Farelo de Trigo
 
--   Endoglucanase: isolados 44, 5 e 48
+-   Endoglucanase: isolados 53, 5 e 49 biomassa: Casca de Soja
 
--   F-PAse: isolados 17, 44 e 52
+-   F-PAse: isolados 52, 13 e 17 biomassa: Farelo de Trigo
 
--   Lacase: isolados 36, 31 e 37
+-   Lacase: isolados 36, 31 e 27 biomassa: Farelo de Trigo
 
--   Manganês-peroxidase: isolados 26, 18 e 53
+-   Manganês-peroxidase: isolados 18 e 50 biomassa: Serragem de Pinus 26 biomassa: Casca de Soja
 
--   Xilanase: isolados 24, 1 e 42
+-   Xilanase: isolados 24 biomassa: Casca de Soja, 51 e 42 biomassa: Farelo de Trigo
 
 Ao integrar os resultados das diferentes enzimas avaliadas, destacam-se como os **três isolados** mais promissores no desempenho geral: **24, 1 e 42.** Esses isolados apresentaram elevada atividade em múltiplas enzimas e, portanto, são recomendados para testes em maior escala visando sua aplicação na biodestoca e outras estratégias de degradação lignocelulósica.

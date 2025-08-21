@@ -8,7 +8,7 @@ title: ""
 
 Nos últimos anos, a silvicultura tem se expandido significativamente no Brasil, com destaque para as monoculturas de Eucalipto voltadas à produção de celulose. A rotação dessas plantações é relativamente curta, durando, em média, até 7 anos. Após dois ou mais ciclos consecutivos de cultivo, torna-se necessária a realização da destoca procedimento que visa remover tocos e raízes remanescentes, os quais dificultam o preparo do solo e o replantio. Atualmente, o método mais comum de destoca é o mecânico (Figura 1).
 
-![](images/clipboard-2107435690.png){fig-align="center" width="506"}
+![](Imagens/fig1.png){fig-align="center"}
 
 ## PROBLEMA SILVICULTURAL
 
@@ -34,7 +34,7 @@ A escolha dos microorganismos deve se basear em alguns requisitos já estabeleci
 
 -   encontrados no subbosque de reflorestamentos.
 
-**Objetivo:** Encontrar fungos xilófagos com potencial enzimático para serem aplicados na biodegradação acelerada de tocos remanescentes em reflorestamentos comerciais.
+**Objetivo:** Encontrar fungos xilófagos com potencial enzimático para serem aplicados na biodegradação acelerada de tocos remanescentes em reflorestamentos comerciais e realizar a identificação a nível de gênero os isolados selecionados.
 
 ## 1° passo: Coleta de materiais em reflorestamento
 
@@ -117,3 +117,41 @@ Dentre os 14 gêneros identificados, predominam os ascomicetos com 9 isolados e 
 ![](Imagens/generos.png)
 
 ## Os microorganismos são efetivamente bons degradadores de madeira?
+
+Os isolados selecionados devem passar por teste de degradação da madeira *in vitro,* seguindo algumas premissas:
+
+-   Testes em condições estabelecidas em norma, com modificações;
+
+-   Testados isoladamente em cavacos de madeira da cultura alvo;
+
+-   Apresentar bons resultados em indices relacionados a madeira.
+
+**Objetivo:** Realizar teste de degradação de madeira *in vitro* com os isolados fúngicos selecionados segundo o perfil enzimático e identificar a nível de espécie os isolados selecionados a partir do teste de degradação de madeira.
+
+## 1° passo: Teste de Biodegradação acelerada da madeira
+
+Esse teste busca entender melhor o efeito da degradação de microorganismo xilófago e sua interação com a madeira em condições controladas.
+
+### Metodologia: Teste de degradação *in vitro*
+
+As amostras de madeira utilizadas pertencem ao híbrido de *E. urophylla x E. grandis* obtidos a partir de peças de madeira derivadas do caule, dimensionados em 2 x 2 x 1 cm, autoclavados a 121 ± 1°C por 20 minutos e mantidos em estufa a 50°C com ventilação forçada até aferição de peso constante. Em seguida, dispostos em dessecador para resfriamento e pesagem da massa inicial e dimensões aferidas para obtenção do volume.
+
+Os testes de degradação foram montados em frascos descartáveis retangulares hermeticamente fechados, que receberam 100 g de solo obtido no Horizonte B, coletados em área de reflorestamento de Eucalipto, separado de raízes, folhas e microfauna, peneirado e autoclavado 121 ± 1°C por 45 minutos.
+
+Cada frasco recebeu sobre a superfície do solo 3 corpos de prova. O tratamento consistiu da mistura do fungo cultivado em substrato por 8 dias a 28° C acrescido do respectivo extrato enzimático obtido na mesma condição de cultivo do fungo. No controle, os frascos receberam o solo e cavacos junto de solução tamponada, feito sob as mesmas condições na ausência do fungo e do substrato, esse processo foi realizado em câmara de fluxo laminar.
+
+![](Imagens/Imagem1.png){width="405"}
+
+Após a montagem dos frascos, os mesmos foram aclimatados e incubados por 90 dias e recuperados com escova de nylon macia para serem acondicionados em ventilação forçada a 50°C, para obtenção de peso constante.
+
+![](Imagens/Imagem2.png){width="694"}
+
+### Resultados: Isolados selecionados a partir de Propriedades fisicas e químicas da madeira
+
+A partir do peso inicial e peso final, foram obtidas: a perda de massa da madeira, perda de densidade aparente;
+
+A partir de análise com equipamento específico foi obtida a perda de dureza da madeira.
+
+As propriedades químicas da madeira foram avaliadas a partir da determinação da composição de celulose, hemicelulose, lignina e extrativos.
+
+![](Imagens/isolados.png)

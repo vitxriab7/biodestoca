@@ -102,6 +102,35 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 }</script>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&amp;family=Playfair+Display:wght@700&amp;display=swap" rel="stylesheet">
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -125,11 +154,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
             <ul class="navbar-nav navbar-nav-scroll me-auto">
   <li class="nav-item">
     <a class="nav-link" href="./index.html"> 
-<span class="menu-text">Início</span></a>
+<span class="menu-text">BIODEGRADAÇÃO - Uma abordagem utilizando enzimas fúngicas</span></a>
   </li>  
   <li class="nav-item">
     <a class="nav-link" href="./introducao.html"> 
-<span class="menu-text">Introdução</span></a>
+<span class="menu-text">Apresentação</span></a>
   </li>  
   <li class="nav-item">
     <a class="nav-link active" href="./melhoresprodutores.html" aria-current="page"> 
@@ -137,7 +166,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </li>  
   <li class="nav-item">
     <a class="nav-link" href="./resultados.html"> 
-<span class="menu-text">Resultados</span></a>
+<span class="menu-text">Visualização</span></a>
   </li>  
   <li class="nav-item">
     <a class="nav-link" href="./conclusao.html"> 
@@ -671,9 +700,471 @@ Levene p-valor: 1.961586e-30
 </div>
 </div>
 </div>
-
-
 </section>
+</section>
+<section id="analise-estatística-para-a-biodegradação-acelerada" class="level1">
+<h1>ANALISE ESTATÍSTICA PARA A BIODEGRADAÇÃO ACELERADA</h1>
+<section id="delineamento-experimental-e-conjunto-de-dados-1" class="level2">
+<h2 class="anchored" data-anchor-id="delineamento-experimental-e-conjunto-de-dados-1">Delineamento Experimental e Conjunto de Dados</h2>
+<p>Nossos dados comportam dados das propriedades fisicas da madeira degradada com isolados selecionados na coleção fúngica CMPC coletados no Sul do Brasil.</p>
+<ul>
+<li>A planilha excel contém dados de 23 isolados induzidos em 3 diferentes substratos, dos quais vamos quantificar a perda de massa, a perda de dureza em relação ao controle negativo e a perda de densidade aparente;</li>
+<li>3 réplicas por isolado, cada uma com 3 cavacos.</li>
+</ul>
+<section id="o-que-esse-script-faz" class="level3">
+<h3 class="anchored" data-anchor-id="o-que-esse-script-faz">📌✅ <strong>O que esse script faz?</strong></h3>
+<ol type="1">
+<li><p><strong>Carregamento de pacotes</strong> apropriados para análise estatística e visualização.</p></li>
+<li><p><strong>Importação de dados</strong> do Excel.</p></li>
+<li><p><strong>Função genérica</strong> que: executa ANOVA, realiza o teste de Tukey, se todas as premissas forem atendidas, e no caso de violadas executa teste não paramétrico, extrai letras de significância com <code>multcompLetters4</code>, gera gráfico de barras com médias e letras.</p></li>
+<li><p><strong>Execução da função</strong> para múltiplas variáveis com diferentes rótulos de eixo Y.</p></li>
+</ol>
+<p>```{# === 0. Carregar pacotes ===} library(readxl) library(dplyr) library(ggplot2) library(multcompView) library(agricolae) library(FSA) library(car) library(Polychrome)</p>
+</section>
+</section>
+</section>
+<section id="carregar-os-dados" class="level1">
+<h1>=== 1. Carregar os dados ===</h1>
+<p>dados &lt;- read_excel(“teste_deg.xlsx”) dados<span class="math inline">\(tratamento &lt;- as.factor(dados\)</span>tratamento)</p>
+</section>
+<section id="função-de-análise-completa" class="level1">
+<h1>=== 2. Função de análise completa ===</h1>
+<p>analise_variavel &lt;- function(dados, variavel, y_label) { dados_var &lt;- dados %&gt;% filter(!is.na(.data[[variavel]])) formula &lt;- as.formula(paste(variavel, “~ tratamento”))</p>
+<p>modelo &lt;- aov(formula, data = dados_var) residuos &lt;- residuals(modelo)</p>
+<p># === Testes de premissas === shapiro_result &lt;- shapiro.test(residuos) levene_result &lt;- leveneTest(formula, data = dados_var)</p>
+<p>shapiro_p &lt;- shapiro_result<span class="math inline">\(p.value
+  levene_p &lt;- levene_result\)</span><code>Pr(&gt;F)</code>[1]</p>
+<p>cat(“=== Análise para”, variavel, “===”) cat(“→ Teste de Normalidade (Shapiro-Wilk):”) print(shapiro_result)</p>
+<p>cat(“→ Teste de Homocedasticidade (Levene):”) print(levene_result)</p>
+<p># === Diagnóstico visual dos resíduos === cat(“→ Gráficos de diagnóstico dos resíduos”) par(mfrow = c(1, 2)) plot(residuos, main = paste(“Resíduos -”, variavel), ylab = “Resíduos”) abline(h = 0, col = “red”, lty = 2) qqnorm(residuos, main = paste(“QQ-Plot -”, variavel)) qqline(residuos, col = “red”) par(mfrow = c(1, 1))</p>
+<p># Caminho 1: Premissas atendidas → Scott-Knott if (shapiro_p &gt; 0.05 &amp; levene_p &gt; 0.05) { cat(“→ Premissas atendidas: usando ANOVA + Scott-Knott”) print(summary(modelo))</p>
+<pre><code>scott &lt;- agricolae::scott.test(modelo, "tratamento", group = TRUE, console = TRUE)
+
+letras_df &lt;- scott$groups %&gt;%
+  mutate(tratamento = rownames(.)) %&gt;%
+  select(tratamento, grupo = groups)</code></pre>
+<p># Caminho 2: Premissas violadas → Kruskal + Dunn } else { cat(“→ Premissas violadas: usando Kruskal-Wallis + Dunn”) kruskal_res &lt;- kruskal.test(formula, data = dados_var) print(kruskal_res)</p>
+<pre><code>dunn &lt;- dunnTest(formula, data = dados_var, method = "bonferroni")
+comp &lt;- dunn$res
+
+tratamentos &lt;- levels(dados_var$tratamento)
+p_mat &lt;- matrix(NA, nrow=length(tratamentos), ncol=length(tratamentos),
+                dimnames = list(tratamentos, tratamentos))
+
+for (i in 1:nrow(comp)) {
+  pares &lt;- strsplit(as.character(comp$Comparison[i]), " - ")[[1]]
+  p_valor &lt;- comp$P.adj[i]
+  p_mat[pares[1], pares[2]] &lt;- p_valor
+  p_mat[pares[2], pares[1]] &lt;- p_valor
+}
+
+letras &lt;- multcompLetters(p_mat, threshold = 0.05)
+letras_df &lt;- data.frame(tratamento = names(letras$Letters),
+                        grupo = letras$Letters)</code></pre>
+<p>}</p>
+<p># === Calcular médias e unir com grupos === medias &lt;- dados_var %&gt;% group_by(tratamento) %&gt;% summarise(media = mean(.data[[variavel]], na.rm = TRUE)) %&gt;% left_join(letras_df, by = “tratamento”)</p>
+<p># === Identificar grupos únicos e marcar com asterisco === grupo_freq &lt;- table(medias$grupo) medias &lt;- medias %&gt;% mutate(asterisco = ifelse(grupo_freq[grupo] == 1, “*“,”“))</p>
+<p># === Ordenar tratamentos por média decrescente === medias &lt;- medias %&gt;% arrange(desc(media)) %&gt;% mutate(tratamento = factor(tratamento, levels = tratamento))</p>
+<p># === Cores com Polychrome (36 cores com alto contraste) === grupos_unicos &lt;- sort(unique(medias$grupo)) paleta &lt;- palette36.colors(length(grupos_unicos)) cores &lt;- setNames(paleta, grupos_unicos)</p>
+<p># === Gráfico === grafico &lt;- ggplot(medias, aes(x = tratamento, y = media, fill = grupo)) + geom_col(width = 0.7) + geom_text(aes(label = asterisco), vjust = -0.8, size = 6, color = “black”) + scale_fill_manual(values = cores) + labs( title = paste(“Média de”, y_label, “por Tratamento”), x = “Tratamento”, y = y_label, fill = “Grupo” ) + coord_flip() + theme_minimal() + theme( text = element_text(size = 12), plot.title = element_text(hjust = 0.5, face = “bold”) )</p>
+<p>print(grafico) }</p>
+</section>
+<section id="rodar-análises" class="level1">
+<h1>=== 3. Rodar análises ===</h1>
+<p>analise_variavel(dados, “pm”, “Perda de Massa (PM)”) analise_variavel(dados, “pdr”, “Perda de Dureza Relativa (PDR)”) analise_variavel(dados, “pds”, “Perda de Densidade Aparente (PDS)”)</p>
+<pre><code>
+### 📌 **1. Variável: `pm` – Perda de Massa**
+
+-   **Shapiro-Wilk**:
+</code></pre>
+<ul>
+<li>W = 0.94606 - p = <strong>3.228e-08</strong> → ❌ Violação da normalidade</li>
+</ul>
+<pre><code>
+-   **Levene (homocedasticidade)**:
+</code></pre>
+<ul>
+<li>F = 4.3557 - p = <strong>2.154e-09</strong> → ❌ Violação da homogeneidade de variâncias</li>
+</ul>
+<pre><code>
+-   **Decisão**: Premissas violadas → Kruskal-Wallis + Dunn
+
+-   **Kruskal-Wallis**:
+</code></pre>
+<ul>
+<li>χ² = 109.39, gl = 23 - p = <strong>3.229e-13</strong> → ✅ Diferença significativa entre tratamentos</li>
+</ul>
+<pre><code>
+### 📌 **2. Variável: `pdr` – Perda de Dureza Relativa**
+
+-   **Shapiro-Wilk**:
+</code></pre>
+<ul>
+<li>W = 0.93213 - p = <strong>1.413e-09</strong> → ❌ Violação da normalidade</li>
+</ul>
+<pre><code>
+-   **Levene**:
+</code></pre>
+<ul>
+<li>F = 0.8714 - p = <strong>0.6371</strong> → ✅ Homocedasticidade aceita</li>
+</ul>
+<pre><code>
+-   **Decisão**: Mesmo com variâncias homogêneas, a normalidade foi violada → Kruskal-Wallis + Dunn
+
+-   **Kruskal-Wallis**:
+</code></pre>
+<ul>
+<li>χ² = 36.85, gl = 23 - p = <strong>0.0337</strong> → ✅ Diferença significativa (moderada)</li>
+</ul>
+<pre><code>
+### 📌 **3. Variável: `pds` – Perda de Densidade Aparente**
+
+-   **Shapiro-Wilk**:
+</code></pre>
+<ul>
+<li>W = 0.94844 - p = <strong>6.066e-08</strong> → ❌ Violação da normalidade</li>
+</ul>
+<pre><code>
+-   **Levene**:
+</code></pre>
+<ul>
+<li>F = 5.0554 - p = <strong>2.486e-11</strong> → ❌ Violação da homocedasticidade</li>
+</ul>
+<pre><code>
+-   **Decisão**: Premissas violadas → Kruskal-Wallis + Dunn
+
+-   **Kruskal-Wallis**:
+</code></pre>
+<ul>
+<li>χ² = 108.57, gl = 23 - p = <strong>4.509e-13</strong> → ✅ Diferença altamente significativa</li>
+</ul>
+<pre><code>
+## 🧪 **Conclusão Técnica**
+
+| Variável | Normalidade | Homocedasticidade | Teste Utilizado | Resultado |
+|---------------|---------------|---------------|---------------|---------------|
+| `pm` | ❌ | ❌ | Kruskal-Wallis + Dunn | **Significativo** |
+| `pdr` | ❌ | ✅ | Kruskal-Wallis + Dunn | **Significativo** |
+| `pds` | ❌ | ❌ | Kruskal-Wallis + Dunn | **Significativo** |
+
+## 📌 Observação
+
+-   **Premissas violadas** → teste **não paramétrico**.
+
+-   O script está **automatizado, robusto e confiável**.
+
+-   Os resultados indicam que **os tratamentos influenciam significativamente** nas três variáveis avaliadas.
+
+
+
+
+::: {.cell}
+
+```{.r .cell-code}
+# === 0. Carregar pacotes ===
+library(readxl)
+library(dplyr)
+library(ggplot2)
+library(multcompView)
+library(agricolae)
+library(FSA)</code></pre>
+<div class="cell-output cell-output-stderr">
+<pre><code>Registered S3 methods overwritten by 'FSA':
+  method       from
+  confint.boot car 
+  hist.boot    car </code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>## FSA v0.10.0. See citation('FSA') if used in publication.
+## Run fishR() for related website and fishR('IFAR') for related book.</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(car)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Carregando pacotes exigidos: carData</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Anexando pacote: 'car'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>O seguinte objeto é mascarado por 'package:FSA':
+
+    bootCase</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>O seguinte objeto é mascarado por 'package:dplyr':
+
+    recode</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(Polychrome)</span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a><span class="co"># === 1. Carregar os dados ===</span></span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>dados <span class="ot">&lt;-</span> <span class="fu">read_excel</span>(<span class="st">"teste_deg.xlsx"</span>)</span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>dados<span class="sc">$</span>tratamento <span class="ot">&lt;-</span> <span class="fu">as.factor</span>(dados<span class="sc">$</span>tratamento)</span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a><span class="co"># === 2. Função de análise completa ===</span></span>
+<span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a>analise_variavel <span class="ot">&lt;-</span> <span class="cf">function</span>(dados, variavel, y_label) {</span>
+<span id="cb45-9"><a href="#cb45-9" aria-hidden="true" tabindex="-1"></a>  dados_var <span class="ot">&lt;-</span> dados <span class="sc">%&gt;%</span> <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(.data[[variavel]]))</span>
+<span id="cb45-10"><a href="#cb45-10" aria-hidden="true" tabindex="-1"></a>  formula <span class="ot">&lt;-</span> <span class="fu">as.formula</span>(<span class="fu">paste</span>(variavel, <span class="st">"~ tratamento"</span>))</span>
+<span id="cb45-11"><a href="#cb45-11" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb45-12"><a href="#cb45-12" aria-hidden="true" tabindex="-1"></a>  modelo <span class="ot">&lt;-</span> <span class="fu">aov</span>(formula, <span class="at">data =</span> dados_var)</span>
+<span id="cb45-13"><a href="#cb45-13" aria-hidden="true" tabindex="-1"></a>  residuos <span class="ot">&lt;-</span> <span class="fu">residuals</span>(modelo)</span>
+<span id="cb45-14"><a href="#cb45-14" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb45-15"><a href="#cb45-15" aria-hidden="true" tabindex="-1"></a>  <span class="co"># === Testes de premissas ===</span></span>
+<span id="cb45-16"><a href="#cb45-16" aria-hidden="true" tabindex="-1"></a>  shapiro_result <span class="ot">&lt;-</span> <span class="fu">shapiro.test</span>(residuos)</span>
+<span id="cb45-17"><a href="#cb45-17" aria-hidden="true" tabindex="-1"></a>  levene_result <span class="ot">&lt;-</span> <span class="fu">leveneTest</span>(formula, <span class="at">data =</span> dados_var)</span>
+<span id="cb45-18"><a href="#cb45-18" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb45-19"><a href="#cb45-19" aria-hidden="true" tabindex="-1"></a>  shapiro_p <span class="ot">&lt;-</span> shapiro_result<span class="sc">$</span>p.value</span>
+<span id="cb45-20"><a href="#cb45-20" aria-hidden="true" tabindex="-1"></a>  levene_p <span class="ot">&lt;-</span> levene_result<span class="sc">$</span><span class="st">`</span><span class="at">Pr(&gt;F)</span><span class="st">`</span>[<span class="dv">1</span>]</span>
+<span id="cb45-21"><a href="#cb45-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-22"><a href="#cb45-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">=== Análise para"</span>, variavel, <span class="st">"===</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb45-23"><a href="#cb45-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"→ Teste de Normalidade (Shapiro-Wilk):</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb45-24"><a href="#cb45-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(shapiro_result)</span>
+<span id="cb45-25"><a href="#cb45-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-26"><a href="#cb45-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">→ Teste de Homocedasticidade (Levene):</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb45-27"><a href="#cb45-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(levene_result)</span>
+<span id="cb45-28"><a href="#cb45-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-29"><a href="#cb45-29" aria-hidden="true" tabindex="-1"></a>  <span class="co"># === Diagnóstico visual dos resíduos ===</span></span>
+<span id="cb45-30"><a href="#cb45-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">→ Gráficos de diagnóstico dos resíduos</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb45-31"><a href="#cb45-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span>
+<span id="cb45-32"><a href="#cb45-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot</span>(residuos, <span class="at">main =</span> <span class="fu">paste</span>(<span class="st">"Resíduos -"</span>, variavel), <span class="at">ylab =</span> <span class="st">"Resíduos"</span>)</span>
+<span id="cb45-33"><a href="#cb45-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">abline</span>(<span class="at">h =</span> <span class="dv">0</span>, <span class="at">col =</span> <span class="st">"red"</span>, <span class="at">lty =</span> <span class="dv">2</span>)</span>
+<span id="cb45-34"><a href="#cb45-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">qqnorm</span>(residuos, <span class="at">main =</span> <span class="fu">paste</span>(<span class="st">"QQ-Plot -"</span>, variavel))</span>
+<span id="cb45-35"><a href="#cb45-35" aria-hidden="true" tabindex="-1"></a>  <span class="fu">qqline</span>(residuos, <span class="at">col =</span> <span class="st">"red"</span>)</span>
+<span id="cb45-36"><a href="#cb45-36" aria-hidden="true" tabindex="-1"></a>  <span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>))</span>
+<span id="cb45-37"><a href="#cb45-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-38"><a href="#cb45-38" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Caminho 1: Premissas atendidas → Scott-Knott</span></span>
+<span id="cb45-39"><a href="#cb45-39" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (shapiro_p <span class="sc">&gt;</span> <span class="fl">0.05</span> <span class="sc">&amp;</span> levene_p <span class="sc">&gt;</span> <span class="fl">0.05</span>) {</span>
+<span id="cb45-40"><a href="#cb45-40" aria-hidden="true" tabindex="-1"></a>    <span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">→ Premissas atendidas: usando ANOVA + Scott-Knott</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb45-41"><a href="#cb45-41" aria-hidden="true" tabindex="-1"></a>    <span class="fu">print</span>(<span class="fu">summary</span>(modelo))</span>
+<span id="cb45-42"><a href="#cb45-42" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb45-43"><a href="#cb45-43" aria-hidden="true" tabindex="-1"></a>    scott <span class="ot">&lt;-</span> agricolae<span class="sc">::</span><span class="fu">scott.test</span>(modelo, <span class="st">"tratamento"</span>, <span class="at">group =</span> <span class="cn">TRUE</span>, <span class="at">console =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb45-44"><a href="#cb45-44" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb45-45"><a href="#cb45-45" aria-hidden="true" tabindex="-1"></a>    letras_df <span class="ot">&lt;-</span> scott<span class="sc">$</span>groups <span class="sc">%&gt;%</span></span>
+<span id="cb45-46"><a href="#cb45-46" aria-hidden="true" tabindex="-1"></a>      <span class="fu">mutate</span>(<span class="at">tratamento =</span> <span class="fu">rownames</span>(.)) <span class="sc">%&gt;%</span></span>
+<span id="cb45-47"><a href="#cb45-47" aria-hidden="true" tabindex="-1"></a>      <span class="fu">select</span>(tratamento, <span class="at">grupo =</span> groups)</span>
+<span id="cb45-48"><a href="#cb45-48" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb45-49"><a href="#cb45-49" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Caminho 2: Premissas violadas → Kruskal + Dunn</span></span>
+<span id="cb45-50"><a href="#cb45-50" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb45-51"><a href="#cb45-51" aria-hidden="true" tabindex="-1"></a>    <span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">→ Premissas violadas: usando Kruskal-Wallis + Dunn</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb45-52"><a href="#cb45-52" aria-hidden="true" tabindex="-1"></a>    kruskal_res <span class="ot">&lt;-</span> <span class="fu">kruskal.test</span>(formula, <span class="at">data =</span> dados_var)</span>
+<span id="cb45-53"><a href="#cb45-53" aria-hidden="true" tabindex="-1"></a>    <span class="fu">print</span>(kruskal_res)</span>
+<span id="cb45-54"><a href="#cb45-54" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb45-55"><a href="#cb45-55" aria-hidden="true" tabindex="-1"></a>    dunn <span class="ot">&lt;-</span> <span class="fu">dunnTest</span>(formula, <span class="at">data =</span> dados_var, <span class="at">method =</span> <span class="st">"bonferroni"</span>)</span>
+<span id="cb45-56"><a href="#cb45-56" aria-hidden="true" tabindex="-1"></a>    comp <span class="ot">&lt;-</span> dunn<span class="sc">$</span>res</span>
+<span id="cb45-57"><a href="#cb45-57" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb45-58"><a href="#cb45-58" aria-hidden="true" tabindex="-1"></a>    tratamentos <span class="ot">&lt;-</span> <span class="fu">levels</span>(dados_var<span class="sc">$</span>tratamento)</span>
+<span id="cb45-59"><a href="#cb45-59" aria-hidden="true" tabindex="-1"></a>    p_mat <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="cn">NA</span>, <span class="at">nrow=</span><span class="fu">length</span>(tratamentos), <span class="at">ncol=</span><span class="fu">length</span>(tratamentos),</span>
+<span id="cb45-60"><a href="#cb45-60" aria-hidden="true" tabindex="-1"></a>                    <span class="at">dimnames =</span> <span class="fu">list</span>(tratamentos, tratamentos))</span>
+<span id="cb45-61"><a href="#cb45-61" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb45-62"><a href="#cb45-62" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(comp)) {</span>
+<span id="cb45-63"><a href="#cb45-63" aria-hidden="true" tabindex="-1"></a>      pares <span class="ot">&lt;-</span> <span class="fu">strsplit</span>(<span class="fu">as.character</span>(comp<span class="sc">$</span>Comparison[i]), <span class="st">" - "</span>)[[<span class="dv">1</span>]]</span>
+<span id="cb45-64"><a href="#cb45-64" aria-hidden="true" tabindex="-1"></a>      p_valor <span class="ot">&lt;-</span> comp<span class="sc">$</span>P.adj[i]</span>
+<span id="cb45-65"><a href="#cb45-65" aria-hidden="true" tabindex="-1"></a>      p_mat[pares[<span class="dv">1</span>], pares[<span class="dv">2</span>]] <span class="ot">&lt;-</span> p_valor</span>
+<span id="cb45-66"><a href="#cb45-66" aria-hidden="true" tabindex="-1"></a>      p_mat[pares[<span class="dv">2</span>], pares[<span class="dv">1</span>]] <span class="ot">&lt;-</span> p_valor</span>
+<span id="cb45-67"><a href="#cb45-67" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb45-68"><a href="#cb45-68" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb45-69"><a href="#cb45-69" aria-hidden="true" tabindex="-1"></a>    letras <span class="ot">&lt;-</span> <span class="fu">multcompLetters</span>(p_mat, <span class="at">threshold =</span> <span class="fl">0.05</span>)</span>
+<span id="cb45-70"><a href="#cb45-70" aria-hidden="true" tabindex="-1"></a>    letras_df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">tratamento =</span> <span class="fu">names</span>(letras<span class="sc">$</span>Letters),</span>
+<span id="cb45-71"><a href="#cb45-71" aria-hidden="true" tabindex="-1"></a>                            <span class="at">grupo =</span> letras<span class="sc">$</span>Letters)</span>
+<span id="cb45-72"><a href="#cb45-72" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb45-73"><a href="#cb45-73" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-74"><a href="#cb45-74" aria-hidden="true" tabindex="-1"></a>  <span class="co"># === Calcular médias e unir com grupos ===</span></span>
+<span id="cb45-75"><a href="#cb45-75" aria-hidden="true" tabindex="-1"></a>  medias <span class="ot">&lt;-</span> dados_var <span class="sc">%&gt;%</span></span>
+<span id="cb45-76"><a href="#cb45-76" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(tratamento) <span class="sc">%&gt;%</span></span>
+<span id="cb45-77"><a href="#cb45-77" aria-hidden="true" tabindex="-1"></a>    <span class="fu">summarise</span>(<span class="at">media =</span> <span class="fu">mean</span>(.data[[variavel]], <span class="at">na.rm =</span> <span class="cn">TRUE</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb45-78"><a href="#cb45-78" aria-hidden="true" tabindex="-1"></a>    <span class="fu">left_join</span>(letras_df, <span class="at">by =</span> <span class="st">"tratamento"</span>)</span>
+<span id="cb45-79"><a href="#cb45-79" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-80"><a href="#cb45-80" aria-hidden="true" tabindex="-1"></a>  <span class="co"># === Identificar grupos únicos e marcar com asterisco ===</span></span>
+<span id="cb45-81"><a href="#cb45-81" aria-hidden="true" tabindex="-1"></a>  grupo_freq <span class="ot">&lt;-</span> <span class="fu">table</span>(medias<span class="sc">$</span>grupo)</span>
+<span id="cb45-82"><a href="#cb45-82" aria-hidden="true" tabindex="-1"></a>  medias <span class="ot">&lt;-</span> medias <span class="sc">%&gt;%</span></span>
+<span id="cb45-83"><a href="#cb45-83" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">asterisco =</span> <span class="fu">ifelse</span>(grupo_freq[grupo] <span class="sc">==</span> <span class="dv">1</span>, <span class="st">"*"</span>, <span class="st">""</span>))</span>
+<span id="cb45-84"><a href="#cb45-84" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-85"><a href="#cb45-85" aria-hidden="true" tabindex="-1"></a>  <span class="co"># === Ordenar tratamentos por média decrescente ===</span></span>
+<span id="cb45-86"><a href="#cb45-86" aria-hidden="true" tabindex="-1"></a>  medias <span class="ot">&lt;-</span> medias <span class="sc">%&gt;%</span></span>
+<span id="cb45-87"><a href="#cb45-87" aria-hidden="true" tabindex="-1"></a>    <span class="fu">arrange</span>(<span class="fu">desc</span>(media)) <span class="sc">%&gt;%</span></span>
+<span id="cb45-88"><a href="#cb45-88" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">tratamento =</span> <span class="fu">factor</span>(tratamento, <span class="at">levels =</span> tratamento))</span>
+<span id="cb45-89"><a href="#cb45-89" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-90"><a href="#cb45-90" aria-hidden="true" tabindex="-1"></a>  <span class="co"># === Marcar tratamentos relacionados ao controle negativo (cn) ===</span></span>
+<span id="cb45-91"><a href="#cb45-91" aria-hidden="true" tabindex="-1"></a>  grupo_cn <span class="ot">&lt;-</span> medias <span class="sc">%&gt;%</span> <span class="fu">filter</span>(tratamento <span class="sc">==</span> <span class="st">"CN"</span>) <span class="sc">%&gt;%</span> <span class="fu">pull</span>(grupo)</span>
+<span id="cb45-92"><a href="#cb45-92" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-93"><a href="#cb45-93" aria-hidden="true" tabindex="-1"></a>  medias <span class="ot">&lt;-</span> medias <span class="sc">%&gt;%</span></span>
+<span id="cb45-94"><a href="#cb45-94" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
+<span id="cb45-95"><a href="#cb45-95" aria-hidden="true" tabindex="-1"></a>      <span class="at">destaque =</span> <span class="fu">case_when</span>(</span>
+<span id="cb45-96"><a href="#cb45-96" aria-hidden="true" tabindex="-1"></a>        tratamento <span class="sc">==</span> <span class="st">"cn"</span> <span class="sc">~</span> <span class="st">"Controle Negativo"</span>,</span>
+<span id="cb45-97"><a href="#cb45-97" aria-hidden="true" tabindex="-1"></a>        grupo <span class="sc">==</span> grupo_cn  <span class="sc">~</span> <span class="st">"Mesmo Grupo que CN"</span>,</span>
+<span id="cb45-98"><a href="#cb45-98" aria-hidden="true" tabindex="-1"></a>        <span class="cn">TRUE</span>               <span class="sc">~</span> <span class="st">"Outros"</span></span>
+<span id="cb45-99"><a href="#cb45-99" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb45-100"><a href="#cb45-100" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb45-101"><a href="#cb45-101" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-102"><a href="#cb45-102" aria-hidden="true" tabindex="-1"></a>  <span class="co"># === Cores específicas para destaque ===</span></span>
+<span id="cb45-103"><a href="#cb45-103" aria-hidden="true" tabindex="-1"></a>  cores_destaque <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb45-104"><a href="#cb45-104" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Controle Negativo"</span> <span class="ot">=</span> <span class="st">"#D73027"</span>,      <span class="co"># vermelho</span></span>
+<span id="cb45-105"><a href="#cb45-105" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Mesmo Grupo que CN"</span> <span class="ot">=</span> <span class="st">"#FC8D59"</span>,     <span class="co"># laranja claro</span></span>
+<span id="cb45-106"><a href="#cb45-106" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Outros"</span> <span class="ot">=</span> <span class="st">"#91BFDB"</span>                  <span class="co"># azul claro</span></span>
+<span id="cb45-107"><a href="#cb45-107" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb45-108"><a href="#cb45-108" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-109"><a href="#cb45-109" aria-hidden="true" tabindex="-1"></a>  <span class="co"># === Gráfico ===</span></span>
+<span id="cb45-110"><a href="#cb45-110" aria-hidden="true" tabindex="-1"></a>  grafico <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(medias, <span class="fu">aes</span>(<span class="at">x =</span> tratamento, <span class="at">y =</span> media, <span class="at">fill =</span> destaque)) <span class="sc">+</span></span>
+<span id="cb45-111"><a href="#cb45-111" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_col</span>(<span class="at">width =</span> <span class="fl">0.7</span>) <span class="sc">+</span></span>
+<span id="cb45-112"><a href="#cb45-112" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_text</span>(<span class="fu">aes</span>(<span class="at">label =</span> asterisco), <span class="at">vjust =</span> <span class="sc">-</span><span class="fl">0.8</span>, <span class="at">size =</span> <span class="dv">6</span>, <span class="at">color =</span> <span class="st">"black"</span>) <span class="sc">+</span></span>
+<span id="cb45-113"><a href="#cb45-113" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> cores_destaque) <span class="sc">+</span></span>
+<span id="cb45-114"><a href="#cb45-114" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(</span>
+<span id="cb45-115"><a href="#cb45-115" aria-hidden="true" tabindex="-1"></a>      <span class="at">title =</span> <span class="fu">paste</span>(<span class="st">"Média de"</span>, y_label, <span class="st">"por Tratamento"</span>),</span>
+<span id="cb45-116"><a href="#cb45-116" aria-hidden="true" tabindex="-1"></a>      <span class="at">x =</span> <span class="st">"Tratamento"</span>,</span>
+<span id="cb45-117"><a href="#cb45-117" aria-hidden="true" tabindex="-1"></a>      <span class="at">y =</span> y_label,</span>
+<span id="cb45-118"><a href="#cb45-118" aria-hidden="true" tabindex="-1"></a>      <span class="at">fill =</span> <span class="st">"Destaque"</span></span>
+<span id="cb45-119"><a href="#cb45-119" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">+</span></span>
+<span id="cb45-120"><a href="#cb45-120" aria-hidden="true" tabindex="-1"></a>    <span class="fu">coord_flip</span>() <span class="sc">+</span></span>
+<span id="cb45-121"><a href="#cb45-121" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb45-122"><a href="#cb45-122" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(</span>
+<span id="cb45-123"><a href="#cb45-123" aria-hidden="true" tabindex="-1"></a>      <span class="at">text =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">12</span>),</span>
+<span id="cb45-124"><a href="#cb45-124" aria-hidden="true" tabindex="-1"></a>      <span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">hjust =</span> <span class="fl">0.5</span>, <span class="at">face =</span> <span class="st">"bold"</span>)</span>
+<span id="cb45-125"><a href="#cb45-125" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb45-126"><a href="#cb45-126" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-127"><a href="#cb45-127" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(grafico)</span>
+<span id="cb45-128"><a href="#cb45-128" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb45-129"><a href="#cb45-129" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-130"><a href="#cb45-130" aria-hidden="true" tabindex="-1"></a><span class="co"># === 3. Rodar análises ===</span></span>
+<span id="cb45-131"><a href="#cb45-131" aria-hidden="true" tabindex="-1"></a><span class="fu">analise_variavel</span>(dados, <span class="st">"pm"</span>,  <span class="st">"Perda de Massa (PM)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+=== Análise para pm ===
+→ Teste de Normalidade (Shapiro-Wilk):
+
+    Shapiro-Wilk normality test
+
+data:  residuos
+W = 0.94606, p-value = 3.228e-08
+
+
+→ Teste de Homocedasticidade (Levene):
+Levene's Test for Homogeneity of Variance (center = median)
+       Df F value    Pr(&gt;F)    
+group  23  4.3557 2.154e-09 ***
+      237                      
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+→ Gráficos de diagnóstico dos resíduos</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="melhoresprodutores_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+→ Premissas violadas: usando Kruskal-Wallis + Dunn
+
+    Kruskal-Wallis rank sum test
+
+data:  pm by tratamento
+Kruskal-Wallis chi-squared = 109.39, df = 23, p-value = 3.229e-13</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="melhoresprodutores_files/figure-html/unnamed-chunk-5-2.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="fu">analise_variavel</span>(dados, <span class="st">"pdr"</span>, <span class="st">"Perda de Dureza Relativa (PDR)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+=== Análise para pdr ===
+→ Teste de Normalidade (Shapiro-Wilk):
+
+    Shapiro-Wilk normality test
+
+data:  residuos
+W = 0.93213, p-value = 1.413e-09
+
+
+→ Teste de Homocedasticidade (Levene):
+Levene's Test for Homogeneity of Variance (center = median)
+       Df F value Pr(&gt;F)
+group  23  0.8714 0.6371
+      237               
+
+→ Gráficos de diagnóstico dos resíduos</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="melhoresprodutores_files/figure-html/unnamed-chunk-5-3.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+→ Premissas violadas: usando Kruskal-Wallis + Dunn
+
+    Kruskal-Wallis rank sum test
+
+data:  pdr by tratamento
+Kruskal-Wallis chi-squared = 36.849, df = 23, p-value = 0.03371</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="melhoresprodutores_files/figure-html/unnamed-chunk-5-4.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="fu">analise_variavel</span>(dados, <span class="st">"pds"</span>, <span class="st">"Perda de Densidade Aparente (PDS)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+=== Análise para pds ===
+→ Teste de Normalidade (Shapiro-Wilk):
+
+    Shapiro-Wilk normality test
+
+data:  residuos
+W = 0.94844, p-value = 6.066e-08
+
+
+→ Teste de Homocedasticidade (Levene):
+Levene's Test for Homogeneity of Variance (center = median)
+       Df F value    Pr(&gt;F)    
+group  23  5.0554 2.486e-11 ***
+      236                      
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+→ Gráficos de diagnóstico dos resíduos</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="melhoresprodutores_files/figure-html/unnamed-chunk-5-5.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+→ Premissas violadas: usando Kruskal-Wallis + Dunn
+
+    Kruskal-Wallis rank sum test
+
+data:  pds by tratamento
+Kruskal-Wallis chi-squared = 108.57, df = 23, p-value = 4.509e-13</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="melhoresprodutores_files/figure-html/unnamed-chunk-5-6.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<p>:::</p>
+<p>No gráfico 1, o Controle Negativo ficou isolado nos grupos de significancia oque demontra uma confiabilidade na análise; os fungos 24 e e 42 ambos com maior perda de massa que o controle, ficaram isolados em grupos de significancia do restante dos grupos, o fungo LT está isolado e, destacando-se com um valor muito acima da maioria das médias dos tratamentos.</p>
+<p>No gráfico 2, os tratamentos ficaram a maioria dentro do mesmo grupo de significancia do controle negativo, oque demontra que essa análise é mais sensivel, a perda de dureza está relacionada com a resistência mecânica da madeira, ps fungos 50, 36 e 26 ficaram em outros grupos de significancia, entretanto, todos tiveram medias menores que o controle negativo. O tratamento LT pelo contrário, demonstra que ficou em um grupo de significancia distinto do controle e causou a maior media de perda de dureza da madeira, essa análise demontra que o fungo degradou a madeira de forma eficiente a afetar componentes estruturais que conferem resistencia a madeira.</p>
+<p>No gráfico 3, nota-se que o controle negativo assim como no gráfico da perda de massa ficou isolado em um grupo de significancia, os tratamentos que ficaram isolados dos demais com medias acima do CN foram: 53, 27, 24 e 42, em relação a maior média o fungo LT continua apresentando os melhores resultados. Em conformidade com todas as análises.</p>
+
+
 </section>
 
 </main> <!-- /main -->
